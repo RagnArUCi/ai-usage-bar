@@ -42,9 +42,9 @@ Detecta tu sistema, baja el instalador correcto del último Release, lo instala 
 | Sistema | Archivo |
 |---|---|
 | macOS (Apple Silicon) | `AI-Usage-x.x.x-arm64.dmg` |
-| macOS (Intel) | `AI-Usage-x.x.x.dmg` |
+| macOS (Intel) | `AI-Usage-x.x.x-x64.dmg` |
 | Windows | `AI-Usage-Setup-x.x.x.exe` |
-| Linux | `AI-Usage-x.x.x.AppImage` |
+| Linux | `AI-Usage-x.x.x-x64.AppImage` |
 
 Los instaladores llevan firma ad-hoc pero no están notarizados (eso exige cuenta de desarrollador de Apple de pago), así que la primera vez el sistema avisa. En macOS:
 
