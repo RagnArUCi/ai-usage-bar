@@ -137,39 +137,75 @@ function collectBuckets(node, out = []) {
   return out;
 }
 
-function prettyModel(modelId) {
-  if (!modelId) return 'Cuota';
-  const m = String(modelId);
-  if (/pro/i.test(m)) return 'Pro';
-  if (/flash-lite/i.test(m)) return 'Flash Lite';
-  if (/flash/i.test(m)) return 'Flash';
-  return m.replace(/^models\//, '');
+// Familias conocidas, de más capaz a menos: fija el orden de los medidores.
+const FAMILIES = [
+  [/pro/i, 'Pro', 0],
+  [/flash-lite/i, 'Flash Lite', 2],
+  [/flash/i, 'Flash', 1],
+];
+
+/**
+ * La versión forma parte del nombre a propósito: la cuota real trae a la vez
+ * `gemini-2.5-flash-lite` y `gemini-3.1-flash-lite`, y sin la versión los dos
+ * medidores se llamarían igual.
+ */
+function describeModel(modelId) {
+  const m = String(modelId || '').replace(/^models\//, '');
+  if (!m) return { label: 'Cuota', rank: 9, version: 0 };
+  const version = (m.match(/(\d+(?:\.\d+)?)/) || [])[1] || null;
+  for (const [re, name, rank] of FAMILIES) {
+    if (re.test(m)) {
+      return {
+        label: version ? `${name} ${version}` : name,
+        rank,
+        version: version ? parseFloat(version) : 0,
+      };
+    }
+  }
+  return { label: m, rank: 8, version: version ? parseFloat(version) : 0 };
 }
 
 function normalize(buckets) {
   const byKind = new Map();
   for (const b of buckets) {
-    const kind = String(b.modelId || b.model || 'quota');
+    const modelId = b.modelId || b.model;
+    const type = b.tokenType || null;
+    // La clave es el modelo. Hoy solo llega tokenType REQUESTS, pero si
+    // apareciera otro tipo para el mismo modelo no debe pisar al primero;
+    // solo entonces se añade al identificador, para no romper el historial
+    // ya acumulado con la clave simple.
+    const kind =
+      type && type !== 'REQUESTS'
+        ? `${modelId || 'quota'}:${type}`
+        : String(modelId || 'quota');
     const pct = Math.max(0, Math.min(100, Math.round((1 - b.remainingFraction) * 100)));
+    const desc = describeModel(modelId);
     const limit = {
       kind,
       group: 'daily',
-      label: prettyModel(b.modelId || b.model),
-      sublabel: null,
+      label: desc.label,
+      sublabel: type && type !== 'REQUESTS' ? String(type).toLowerCase() : null,
       pct,
       // La API de Gemini no reporta severidad: se calcula con umbrales.
       severity: severityFor(pct),
       resetsAt: b.resetTime || b.resetsAt || null,
+      _rank: desc.rank,
+      _version: desc.version,
     };
-    // Si llegan dos buckets del mismo modelo se queda el más consumido: en una
-    // herramienta de aviso conviene errar hacia la advertencia.
+    // Si llegan dos buckets de la misma clave se queda el más consumido: en
+    // una herramienta de aviso conviene errar hacia la advertencia.
     const prev = byKind.get(kind);
     if (!prev || limit.pct > prev.pct) byKind.set(kind, limit);
   }
-  const out = [...byKind.values()];
-  // Pro primero, luego Flash, luego el resto: es el orden en que importan.
-  const rank = (l) => (/^Pro/.test(l.label) ? 0 : /^Flash/.test(l.label) ? 1 : 2);
-  return out.sort((a, b) => rank(a) - rank(b) || a.label.localeCompare(b.label));
+
+  // Pro antes que Flash antes que Flash Lite; dentro de cada familia, la
+  // versión más nueva primero.
+  return [...byKind.values()]
+    .sort(
+      (a, b) =>
+        a._rank - b._rank || b._version - a._version || a.label.localeCompare(b.label)
+    )
+    .map(({ _rank, _version, ...l }) => l);
 }
 
 async function detect() {

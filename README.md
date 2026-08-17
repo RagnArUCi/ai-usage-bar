@@ -11,8 +11,8 @@ Al hacer clic se abre un panel con una pastilla por proveedor: cambias entre ell
 
 | Proveedor | Estado | De dónde sale el dato |
 |---|---|---|
-| **Claude** | Funciona | Sesión de Claude Code (Llavero o `~/.claude/.credentials.json`) → endpoint oficial de uso |
-| **Gemini** | Implementado, sin verificar en vivo | Sesión del CLI de Gemini (`~/.gemini/oauth_creds.json`) → cuota de Gemini Code Assist |
+| **Claude** | Verificado | Sesión de Claude Code (Llavero o `~/.claude/.credentials.json`) → endpoint oficial de uso. Sesión de 5 h y semanal, con la severidad que calcula el propio servidor. |
+| **Gemini** | Verificado | Sesión del CLI de Gemini (`~/.gemini/oauth_creds.json`) → cuota de Gemini Code Assist. Un medidor por modelo (Pro, Flash, Flash Lite), con reinicio diario. |
 
 **La regla de la casa: si no se puede leer el consumo real de un proveedor, no se muestra un número.** La pastilla aparece atenuada, sin barra, y el panel explica qué falta para configurarlo. Nunca se rellena con estimaciones.
 

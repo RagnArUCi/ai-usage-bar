@@ -51,14 +51,51 @@ test('los extremos quedan en 0 y 100', () => {
   assert.strictEqual(normalize([{ modelId: 'd', remainingFraction: -0.4 }])[0].pct, 100);
 });
 
-test('Pro va antes que Flash, y Flash antes del resto', () => {
+test('Pro va antes que Flash, Flash antes de Flash Lite, y el resto al final', () => {
   const orden = normalize([
     { modelId: 'gemini-2.5-flash-lite', remainingFraction: 0.9 },
     { modelId: 'otra-cosa', remainingFraction: 0.9 },
     { modelId: 'gemini-2.5-pro', remainingFraction: 0.9 },
     { modelId: 'gemini-2.5-flash', remainingFraction: 0.9 },
   ]).map((l) => l.label);
-  assert.deepStrictEqual(orden, ['Pro', 'Flash', 'Flash Lite', 'otra-cosa']);
+  assert.deepStrictEqual(orden, ['Pro 2.5', 'Flash 2.5', 'Flash Lite 2.5', 'otra-cosa']);
+});
+
+// Caso real de la API: llegan dos Flash Lite de versiones distintas y sin la
+// versión en el nombre los dos medidores se llamaban igual.
+test('la versión distingue modelos de la misma familia', () => {
+  const etiquetas = normalize([
+    { modelId: 'gemini-2.5-flash-lite', remainingFraction: 1 },
+    { modelId: 'gemini-3.1-flash-lite', remainingFraction: 1 },
+  ]).map((l) => l.label);
+  assert.deepStrictEqual(etiquetas, ['Flash Lite 3.1', 'Flash Lite 2.5'], 'la más nueva primero');
+  assert.strictEqual(new Set(etiquetas).size, 2, 'no puede haber dos etiquetas iguales');
+});
+
+test('los cuatro modelos reales de la API salen con nombres únicos', () => {
+  const res = normalize([
+    { modelId: 'gemini-2.5-flash', remainingFraction: 1, tokenType: 'REQUESTS' },
+    { modelId: 'gemini-2.5-flash-lite', remainingFraction: 1, tokenType: 'REQUESTS' },
+    { modelId: 'gemini-2.5-pro', remainingFraction: 1, tokenType: 'REQUESTS' },
+    { modelId: 'gemini-3.1-flash-lite', remainingFraction: 1, tokenType: 'REQUESTS' },
+  ]);
+  assert.strictEqual(res.length, 4);
+  assert.strictEqual(new Set(res.map((l) => l.label)).size, 4);
+  assert.strictEqual(new Set(res.map((l) => l.kind)).size, 4);
+  // tokenType REQUESTS no ensucia la clave ni añade subetiqueta.
+  assert.strictEqual(res[0].kind, 'gemini-2.5-pro');
+  assert.strictEqual(res[0].sublabel, null);
+});
+
+test('un tokenType distinto de REQUESTS no pisa al del mismo modelo', () => {
+  const res = normalize([
+    { modelId: 'gemini-2.5-pro', remainingFraction: 0.9, tokenType: 'REQUESTS' },
+    { modelId: 'gemini-2.5-pro', remainingFraction: 0.2, tokenType: 'TOKENS' },
+  ]);
+  assert.strictEqual(res.length, 2, 'son dos cuotas distintas, no un duplicado');
+  const tokens = res.find((l) => l.kind === 'gemini-2.5-pro:TOKENS');
+  assert.ok(tokens, 'la clave incluye el tipo cuando no es REQUESTS');
+  assert.strictEqual(tokens.sublabel, 'tokens');
 });
 
 test('ante duplicados del mismo modelo se queda el más consumido', () => {
