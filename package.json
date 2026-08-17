@@ -30,7 +30,6 @@
       "output": "dist"
     },
     "afterPack": "scripts/adhoc-sign.js",
-    "//artifactName": "Sin espacios y con la arquitectura siempre explícita: el productName lleva espacio y al subirlo se convertía en punto, y sin arquitectura visible el selector del instalador no puede distinguir arm64 de x64.",
     "artifactName": "AI-Usage-${version}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.utilities",
