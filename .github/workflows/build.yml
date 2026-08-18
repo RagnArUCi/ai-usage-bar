@@ -71,15 +71,36 @@ jobs:
 
       # Queda en borrador a propósito: las notas se escriben a mano antes de
       # publicarlo con `gh release edit <tag> --draft=false`.
+      #
+      # Con reintentos porque la API de releases devuelve 503 de vez en cuando
+      # y un fallo transitorio de GitHub no debe tirar una publicación cuyos
+      # instaladores ya están compilados. El intento es idempotente: si el
+      # `create` llegó a crear el release, el siguiente intento lo detecta y
+      # sube los ficheros con --clobber.
       - name: Publicar en el Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
-          else
-            gh release create "$TAG" artifacts/* \
-              --repo "$GITHUB_REPOSITORY" --draft --title "$TAG" \
-              --notes "Instaladores para macOS, Windows y Linux."
-          fi
+
+          publicar() {
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              gh release upload "$TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --clobber
+            else
+              gh release create "$TAG" artifacts/* \
+                --repo "$GITHUB_REPOSITORY" --draft --title "$TAG" \
+                --notes "Instaladores para macOS, Windows y Linux."
+            fi
+          }
+
+          for intento in 1 2 3 4 5; do
+            if publicar; then
+              echo "publicado en el intento $intento"
+              exit 0
+            fi
+            espera=$((intento * 20))
+            echo "intento $intento falló; reintentando en ${espera}s"
+            sleep "$espera"
+          done
+          echo "no se pudo publicar tras 5 intentos"
+          exit 1
