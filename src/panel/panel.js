@@ -88,6 +88,16 @@ function buildGlyph(kind) {
     radialGlyph(svg, 12, [1, 0.82, 0.93], '1.35');
   } else if (kind === 'sparkle') {
     radialGlyph(svg, 4, [1], '1.7', 0);
+  } else if (kind === 'diamond') {
+    svg.appendChild(
+      svgEl('path', {
+        d: 'M8 1.6 L14.4 8 L8 14.4 L1.6 8 Z',
+        fill: 'none',
+        stroke: 'currentColor',
+        'stroke-width': '1.6',
+        'stroke-linejoin': 'round',
+      })
+    );
   } else {
     // Barras de medidor, la marca por defecto.
     const heights = [0.5, 1, 0.72];
@@ -309,6 +319,13 @@ function render(payload) {
     notice.hidden = false;
   } else if (prov && prov.needsLogin) {
     notice.textContent = `La sesión de ${prov.name} caducó. ${prov.hint}`;
+    notice.hidden = false;
+  } else if (prov && prov.needsAction) {
+    // No es una sesión caducada: la cuenta existe y el servicio la rechaza.
+    // Se cita el motivo que da la API en vez de inventar una explicación.
+    notice.textContent = prov.detail
+      ? `${prov.name}: ${prov.detail}`
+      : `${prov.name} rechazó la consulta (${prov.error}).`;
     notice.hidden = false;
   } else if (prov && prov.status === 'error') {
     notice.textContent = 'Todavía no hay datos. Reintentando…';

@@ -19,8 +19,9 @@
 const { severityFor } = require('./severity');
 const claude = require('./claude');
 const gemini = require('./gemini');
+const kiro = require('./kiro');
 
-const PROVIDERS = [claude, gemini];
+const PROVIDERS = [claude, gemini, kiro];
 
 function byId(id) {
   return PROVIDERS.find((p) => p.id === id) || null;

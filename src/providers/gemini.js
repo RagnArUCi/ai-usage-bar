@@ -109,6 +109,16 @@ async function refresh(creds) {
   return updated;
 }
 
+/** Mensaje de error que devuelve la API, para no tener que adivinarlo. */
+async function apiMessage(res) {
+  try {
+    const j = await res.json();
+    return (j && j.error && j.error.message) || null;
+  } catch {
+    return null;
+  }
+}
+
 function post(pathname, token, body) {
   return fetch(`${BASE}:${pathname}`, {
     method: 'POST',
@@ -250,7 +260,19 @@ async function fetchUsage() {
   }
 
   if (res.status === 429) return { error: 'rate-limit', retryable: true };
-  if (res.status === 401 || res.status === 403) return { error: 'expired', retryable: false };
+  if (res.status === 401) return { error: 'expired', retryable: false };
+  // Un 403 aqui NO es una sesion caducada: el token es valido y el servicio
+  // esta rechazando la cuenta (tipicamente por falta de licencia de Code
+  // Assist). Decirle al usuario que vuelva a iniciar sesion no le arregla
+  // nada, asi que se distingue y se muestra el motivo que da la API.
+  if (res.status === 403) {
+    const detail = await apiMessage(res);
+    return {
+      error: /licen/i.test(detail || '') ? 'sin-licencia' : 'sin-permiso',
+      retryable: false,
+      detail,
+    };
+  }
   if (res.status >= 500) return { error: `http-${res.status}`, retryable: true };
   if (!res.ok) return { error: `http-${res.status}`, retryable: false };
 

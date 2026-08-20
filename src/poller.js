@@ -33,7 +33,14 @@ const STALE_FACTOR = 2.5;
 // Separación entre proveedores al arrancar, para escalonar sus ciclos.
 const STAGGER_MS = 4 * 1000;
 
-const AUTH_ERRORS = new Set(['no-credentials', 'expired', 'sin-client-oauth']);
+// Errores que no se arreglan reintentando: hace falta que el usuario haga algo.
+const AUTH_ERRORS = new Set([
+  'no-credentials',
+  'expired',
+  'sin-client-oauth',
+  'sin-licencia',
+  'sin-permiso',
+]);
 
 // Qué rutas locales indican que un proveedor se está usando ahora mismo.
 const ACTIVITY_PATHS = {
@@ -44,6 +51,10 @@ const ACTIVITY_PATHS = {
   gemini: [
     { p: '.gemini/tmp', recursive: true },
     { p: '.gemini/oauth_creds.json', recursive: false },
+  ],
+  kiro: [
+    { p: '.kiro/sessions', recursive: true },
+    { p: '.aws/sso/cache/kiro-auth-token.json', recursive: false },
   ],
 };
 
@@ -64,6 +75,7 @@ class Poller extends EventEmitter {
         lastAttempt: 0,
         lastActivity: 0,
         lastError: null,
+        lastDetail: null,
         nextAttemptAt: 0,
       });
     }
@@ -206,6 +218,7 @@ class Poller extends EventEmitter {
     if (res.error) {
       s.failures += 1;
       s.lastError = res.error;
+      s.lastDetail = res.detail || null;
       const delay = AUTH_ERRORS.has(res.error)
         ? Math.max(this.intervalMs(s), 5 * 60 * 1000)
         : this.backoffMs(s, res);
@@ -213,6 +226,7 @@ class Poller extends EventEmitter {
     } else {
       s.failures = 0;
       s.lastError = null;
+      s.lastDetail = null;
       const snapshot = { limits: res.limits, fetchedAt: Date.now() };
       store.setCache(id, snapshot);
       store.addSample(id, snapshot);
@@ -244,7 +258,10 @@ class Poller extends EventEmitter {
       fetchedAt: snap ? snap.fetchedAt : null,
       ageMs,
       error: s.lastError,
-      needsLogin: AUTH_ERRORS.has(s.lastError),
+      // Lo que dijo la API, cuando lo dice: mejor eso que una frase generica.
+      detail: s.lastDetail,
+      needsLogin: s.lastError === 'no-credentials' || s.lastError === 'expired',
+      needsAction: AUTH_ERRORS.has(s.lastError),
       history: store.getHistory(id),
     };
   }

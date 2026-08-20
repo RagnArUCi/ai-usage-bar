@@ -80,6 +80,8 @@ function buildPayload() {
       status: s.status,
       available: s.available,
       needsLogin: s.needsLogin,
+      needsAction: s.needsAction,
+      detail: s.detail,
       error: s.error,
       fetchedAt: s.fetchedAt,
       ageMs: s.ageMs,

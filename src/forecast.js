@@ -16,6 +16,7 @@ const PROFILES = {
   session: { windowMs: 60 * 60 * 1000, minSpanMs: 8 * 60 * 1000, minRate: 0.5 },
   daily: { windowMs: 12 * 3600 * 1000, minSpanMs: 2 * 3600 * 1000, minRate: 0.1 },
   weekly: { windowMs: 48 * 3600 * 1000, minSpanMs: 6 * 3600 * 1000, minRate: 0.05 },
+  monthly: { windowMs: 7 * 24 * 3600 * 1000, minSpanMs: 24 * 3600 * 1000, minRate: 0.02 },
 };
 
 function profileFor(limit) {

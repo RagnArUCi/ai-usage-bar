@@ -13,13 +13,19 @@ Al hacer clic se abre un panel con una pastilla por proveedor: cambias entre ell
 |---|---|---|
 | **Claude** | Verificado | Sesión de Claude Code (Llavero o `~/.claude/.credentials.json`) → endpoint oficial de uso. Sesión de 5 h y semanal, con la severidad que calcula el propio servidor. |
 | **Gemini** | Verificado | Sesión del CLI de Gemini (`~/.gemini/oauth_creds.json`) → cuota de Gemini Code Assist. Un medidor por modelo (Pro, Flash, Flash Lite), con reinicio diario. |
+| **Kiro** | Verificado | Sesión de IAM Identity Center que Kiro guarda en la caché de AWS SSO → `GetUsageLimits` de CodeWhisperer. Créditos consumidos del plan, con reinicio mensual y detalle del exceso si lo hay. |
 
 **La regla de la casa: si no se puede leer el consumo real de un proveedor, no se muestra un número.** La pastilla aparece atenuada, sin barra, y el panel explica qué falta para configurarlo. Nunca se rellena con estimaciones.
 
 ### Por qué no están otros
 
 - **Copilot** — GitHub no expone la cuota de *premium requests* en ninguna API pública. Solo existe un endpoint interno que usan los editores, sin documentar ni garantías.
+- **Codex** — el endpoint existe (`chatgpt.com/backend-api/wham/usage`, leyendo `~/.codex/auth.json`), pendiente de verificarlo contra una sesión real del CLI.
 - **Cursor, z.ai, MiniMax** — pendientes de poder verificar sus endpoints contra una cuenta real. Añadir uno es escribir un módulo (ver más abajo), no tocar la app.
+
+### Cuando un proveedor rechaza la consulta
+
+No todos los fallos son sesiones caducadas, y decir lo contrario manda al usuario a iniciar sesión en vano. La app distingue un **401** (la sesión sí caducó) de un **403** (la sesión es válida y el servicio rechaza la cuenta, por ejemplo por falta de licencia), y en ese caso **cita el motivo que devuelve la API** en lugar de inventar una explicación.
 
 ## Instalación
 
@@ -58,7 +64,7 @@ En Windows, en el aviso de SmartScreen: **Más información → Ejecutar de toda
 
 - **Rejilla de proveedores** con un mini medidor cada uno, para ver de un vistazo cuál va más apretado.
 - **Cifra principal** del proveedor seleccionado (o del más consumido, en automático).
-- **Proyección** — "a este ritmo se agota sobre las 18:40". El tramo que se mide depende de la ventana: 1 hora para una sesión de 5 h, 12 para una diaria, 48 para una semanal. Extrapolar un ritmo horario a 7 días asumiría que trabajas sin dormir.
+- **Proyección** — "a este ritmo se agota sobre las 18:40". El tramo que se mide depende de la ventana: 1 hora para una sesión de 5 h, 12 para una diaria, 48 para una semanal, 7 días para una mensual. Extrapolar un ritmo horario a 7 días asumiría que trabajas sin dormir.
 - **Tendencia** de la ventana actual.
 - **Avisos** al cruzar el 80 % y el 95 %, una vez por umbral, ventana y proveedor.
 
@@ -81,7 +87,7 @@ Un módulo en `src/providers/` con esta forma, y registrarlo en `src/providers/i
 module.exports = {
   id: 'miproveedor',
   name: 'Mi Proveedor',
-  glyph: 'bars',                  // 'sunburst' | 'sparkle' | 'bars'
+  glyph: 'bars',                  // 'sunburst' | 'sparkle' | 'diamond' | 'bars'
   hint: 'Qué hacer para configurarlo.',
   async detect() { /* solo disco, sin red */ },
   async fetch() {
@@ -91,7 +97,7 @@ module.exports = {
 };
 ```
 
-`group` elige el perfil de proyección: `session`, `daily` o `weekly`. Si la API no reporta severidad, usa `severityFor(pct)` de `src/providers/severity.js`.
+`group` elige el perfil de proyección: `session`, `daily`, `weekly` o `monthly`. Si la API no reporta severidad, usa `severityFor(pct)` de `src/providers/severity.js`.
 
 ## Privacidad
 
