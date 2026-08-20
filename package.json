@@ -1,6 +1,6 @@
 {
   "name": "ai-usage-bar",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Muestra el consumo de tus planes de IA (Claude, Gemini…) en la barra de menú de macOS y en la bandeja de Windows y Linux.",
   "main": "main.js",
   "author": "RagnArTheVikings",
