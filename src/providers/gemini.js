@@ -291,7 +291,7 @@ async function fetchUsage() {
 module.exports = {
   id: 'gemini',
   name: 'Gemini',
-  glyph: 'sparkle',
+  glyph: 'gemini',
   hint: 'Ejecuta `gemini` en la terminal e inicia sesión.',
   detect,
   fetch: fetchUsage,

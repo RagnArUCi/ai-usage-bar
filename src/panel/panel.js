@@ -81,23 +81,44 @@ function radialGlyph(svg, count, lens, width, offset = Math.PI / count) {
   }
 }
 
-/** Marcas geométricas simples, una por proveedor. */
+// Siluetas de las marcas de cada proveedor. Monocromas a proposito: heredan
+// currentColor, asi se tinen solas en claro/oscuro y en la pastilla
+// seleccionada. Un logo a todo color no se adaptaria a esos tres fondos.
+const SHAPES = {
+  // Fantasma de Kiro, con sus tres ondas y los ojos calados (evenodd), que
+  // dejan ver el fondo de la pastilla igual que en el logo original.
+  ghost: {
+    d:
+      'M3 13.2 V7.5 a5 5 0 0 1 10 0 V13.2 ' +
+      'c-0.45 1.75 -2.88 1.75 -3.333 0 c-0.45 1.75 -2.88 1.75 -3.333 0 ' +
+      'c-0.45 1.75 -2.88 1.75 -3.333 0 Z ' +
+      'M6.35 6.6 a1 1 0 1 0 0 2 a1 1 0 1 0 0 -2 Z ' +
+      'M9.65 6.6 a1 1 0 1 0 0 2 a1 1 0 1 0 0 -2 Z',
+    rule: 'evenodd',
+  },
+  // Estrella de cuatro puntas de Gemini, con los lados concavos.
+  gemini: {
+    d:
+      'M8 0.9 C8.45 5.6 10.4 7.55 15.1 8 C10.4 8.45 8.45 10.4 8 15.1 ' +
+      'C7.55 10.4 5.6 8.45 0.9 8 C5.6 7.55 7.55 5.6 8 0.9 Z',
+    rule: 'nonzero',
+  },
+};
+
+/** Marca de cada proveedor. */
 function buildGlyph(kind) {
   const svg = svgEl('svg', { viewBox: '0 0 16 16', 'aria-hidden': 'true' });
-  if (kind === 'sunburst') {
-    radialGlyph(svg, 12, [1, 0.82, 0.93], '1.35');
-  } else if (kind === 'sparkle') {
-    radialGlyph(svg, 4, [1], '1.7', 0);
-  } else if (kind === 'diamond') {
+  if (SHAPES[kind]) {
     svg.appendChild(
       svgEl('path', {
-        d: 'M8 1.6 L14.4 8 L8 14.4 L1.6 8 Z',
-        fill: 'none',
-        stroke: 'currentColor',
-        'stroke-width': '1.6',
-        'stroke-linejoin': 'round',
+        d: SHAPES[kind].d,
+        fill: 'currentColor',
+        'fill-rule': SHAPES[kind].rule,
       })
     );
+  } else if (kind === 'sunburst') {
+    // El asterisco de Claude: doce rayos de longitudes alternas.
+    radialGlyph(svg, 12, [1, 0.82, 0.93], '1.35');
   } else {
     // Barras de medidor, la marca por defecto.
     const heights = [0.5, 1, 0.72];

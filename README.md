@@ -87,7 +87,7 @@ Un módulo en `src/providers/` con esta forma, y registrarlo en `src/providers/i
 module.exports = {
   id: 'miproveedor',
   name: 'Mi Proveedor',
-  glyph: 'bars',                  // 'sunburst' | 'sparkle' | 'diamond' | 'bars'
+  glyph: 'bars',                  // 'sunburst' | 'gemini' | 'ghost' | 'bars'
   hint: 'Qué hacer para configurarlo.',
   async detect() { /* solo disco, sin red */ },
   async fetch() {

@@ -234,7 +234,7 @@ async function fetchUsage() {
 module.exports = {
   id: 'kiro',
   name: 'Kiro',
-  glyph: 'diamond',
+  glyph: 'ghost',
   hint: 'Abre Kiro e inicia sesión.',
   detect,
   fetch: fetchUsage,
