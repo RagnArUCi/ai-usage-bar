@@ -1,0 +1,46 @@
+name: Proponer un proveedor
+description: Añadir soporte para otro servicio de IA
+labels: [proveedor]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de abrir esto: mira
+        [docs/providers/README.md](../blob/main/docs/providers/README.md).
+        Ahí están los que ya se descartaron y por qué — Copilot, por ejemplo,
+        no expone su cuota en ninguna API pública.
+
+        **La condición es que exista una forma de leer el consumo real.** Sin
+        eso no se añade el proveedor: la app no muestra números estimados.
+  - type: input
+    id: servicio
+    attributes:
+      label: Servicio
+      placeholder: "Cursor, Codex, z.ai…"
+    validations:
+      required: true
+  - type: textarea
+    id: credenciales
+    attributes:
+      label: Dónde guarda la sesión en el equipo
+      placeholder: "~/.config/algo/token.json, el Llavero, una base SQLite…"
+  - type: textarea
+    id: endpoint
+    attributes:
+      label: Endpoint de consumo, si lo conoces
+      description: Método, URL, cabeceras y cuerpo.
+      render: http
+  - type: textarea
+    id: respuesta
+    attributes:
+      label: Forma de la respuesta
+      description: >
+        Un recorte real, **sin tokens ni identificadores personales**. Es lo
+        más valioso que puedes aportar.
+      render: json
+  - type: checkboxes
+    id: cuenta
+    attributes:
+      label: Verificación
+      options:
+        - label: Tengo cuenta en ese servicio y puedo probar los cambios

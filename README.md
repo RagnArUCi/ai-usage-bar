@@ -114,6 +114,16 @@ npm start
 npm run dist
 ```
 
+## Documentación
+
+| | |
+|---|---|
+| [Contratos de los proveedores](docs/providers/) | Credenciales, endpoints y forma de la respuesta de cada uno, tal y como se verificaron |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Cómo añadir un proveedor y qué se pide en un PR |
+| [AGENTS.md](AGENTS.md) | Para agentes de IA: arquitectura, invariantes y trampas ya pisadas |
+| [SECURITY.md](SECURITY.md) | Qué hace la app con tus credenciales, y qué no |
+| [CHANGELOG.md](CHANGELOG.md) | Registro de cambios |
+
 ## Licencia
 
-MIT
+MIT — ver [LICENSE](LICENSE).
